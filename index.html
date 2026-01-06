@@ -7,8 +7,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     
+    <!-- 💡 CSS TAMBAHAN UNTUK SLIDE + ABOUT -->
     <style>
-        /* Ganti .hero-bg jadi container */
+        /* HERO SLIDE (sama seperti sebelumnya) */
         .hero-slides {
             position: absolute;
             top: 0;
@@ -17,8 +18,6 @@
             height: 100%;
             overflow: hidden;
         }
-
-        /* Pastikan .hero-bg tetap cover */
         .hero-slides .hero-bg {
             position: absolute;
             top: 0;
@@ -27,6 +26,62 @@
             height: 100%;
             object-fit: cover;
             transition: transform 0.5s cubic-bezier(0.33, 0, 0.66, 1);
+        }
+
+        /* === ABOUT US SECTION === */
+        .about {
+            padding: 5rem 8%;
+            display: flex;
+            align-items: center;
+            gap: 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-images {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            max-width: 500px;
+        }
+
+        .about-images img {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .about-content {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .about-content h2 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600;
+            font-size: 2.2rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .about-content p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #555;
+            font-weight: 400;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .about {
+                flex-direction: column;
+                text-align: center;
+            }
+            .about-images {
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -39,7 +94,7 @@
             <a href="#">Home</a>
             <a href="#">Shop</a>
             <a href="#">Pages</a>
-            <a href="#footer-about">About Us</a>
+            <a href="#about">About Us</a>
             <a href="#">Contact Us</a>
         </nav>
         <div class="nav-text-links">
@@ -50,11 +105,9 @@
 
     <!-- HERO -->
     <section class="hero">
-        <!-- Ganti img jadi container -->
         <div class="hero-slides">
             <img src="/slidebg/1.webp" class="hero-bg" onerror="this.src='/slidebg/1.webp'">
         </div>
-        <!-- .hero-content tetap di sini, POSISI DIKONTROL OLEH CSS-MU -->
         <div class="hero-content">
             <h1>EMBRANCING<br>THE CHILL</h1>
             <button class="btn">Discovery Now</button>
@@ -63,9 +116,21 @@
         <button class="arrow right">›</button>
     </section>
     
-    <section class="products" id="products-section">
-        <h2>New Arrivals</h2>
-        <div class="products-grid" id="products-grid"></div>
+    <!-- ABOUT US SECTION (menggantikan New Arrivals) -->
+    <section class="about" id="about">
+        <div class="about-images">
+            <!-- Ganti dengan foto asli kamu -->
+            <img src="/about/1.webp" alt="Lumineuse Team">
+            <img src="/about/2.webp" alt="Lumineuse Studio">
+            <img src="/about/3.webp" alt="Lumineuse Design">
+        </div>
+        <div class="about-content">
+            <h2>About Us</h2>
+            <p>
+                LUMINEUSE is an urban streetwear brand founded in May 2025 and based in West Jakarta, Indonesia. 
+                Rooted in city culture and self-expression, LUMINEUSE combines bold design with everyday functionality.
+            </p>
+        </div>
     </section>
 	
     <!-- FOOTER -->
@@ -92,7 +157,7 @@
     </footer>
 
 <script>
-// === DETEKSI FILE YANG ADA ===
+// === SLIDER HERO (sama seperti sebelumnya) ===
 async function findValidSlides(max = 20) {
     const slides = [];
     for (let i = 1; i <= max; i++) {
@@ -107,7 +172,6 @@ async function findValidSlides(max = 20) {
     return slides;
 }
 
-// === SLIDER ===
 let validSlides = [];
 let currentIndex = 0;
 let autoInterval;
@@ -137,16 +201,13 @@ function slideTo(direction) {
     if (isAnimating || validSlides.length <= 1) return;
     isAnimating = true;
 
-    const currentNum = validSlides[currentIndex];
     const nextIndex = direction === 'next'
         ? (currentIndex + 1) % validSlides.length
         : (currentIndex - 1 + validSlides.length) % validSlides.length;
-    const nextNum = validSlides[nextIndex];
 
-    const currentEl = createSlideEl(currentNum);
-    const nextEl = createSlideEl(nextNum);
+    const currentEl = createSlideEl(validSlides[currentIndex]);
+    const nextEl = createSlideEl(validSlides[nextIndex]);
 
-    // Posisi awal
     currentEl.style.transform = 'translateX(0)';
     nextEl.style.transform = direction === 'next' ? 'translateX(100%)' : 'translateX(-100%)';
 
@@ -154,7 +215,6 @@ function slideTo(direction) {
     slidesContainer.appendChild(currentEl);
     slidesContainer.appendChild(nextEl);
 
-    // Trigger animasi
     setTimeout(() => {
         currentEl.style.transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)';
         nextEl.style.transform = 'translateX(0)';
@@ -167,41 +227,13 @@ function slideTo(direction) {
     }, 500);
 }
 
-function next() { slideTo('next'); }
-function prev() { slideTo('prev'); }
+leftBtn.addEventListener('click', () => { slideTo('prev'); resetAuto(); });
+rightBtn.addEventListener('click', () => { slideTo('next'); resetAuto(); });
 
-function startAuto() {
+function resetAuto() {
     clearInterval(autoInterval);
     if (validSlides.length > 1) {
-        autoInterval = setInterval(next, 2000);
-    }
-}
-
-leftBtn.addEventListener('click', () => { prev(); startAuto(); });
-rightBtn.addEventListener('click', () => { next(); startAuto(); });
-
-// === LOAD PRODUK ===
-async function loadProducts() {
-    const grid = document.getElementById('products-grid');
-    try {
-        const res = await fetch('/api/products');
-        const products = await res.json();
-        grid.innerHTML = '';
-        products.forEach((p, i) => {
-            const ph = `/placeholder/${(i % 10) + 1}.webp`;
-            const clean = p.photo_url?.replace('/uploads/', '') || '';
-            const el = document.createElement('div');
-            el.className = 'product-card';
-            el.innerHTML = `
-                <img src="${p.photo_url ? '/photo?file=' + clean : ph}" 
-                     alt="${p.name}" onerror="this.src='${ph}'">
-                <h3>${p.name}</h3>
-                <p class="price">Rp ${p.price}</p>
-            `;
-            grid.appendChild(el);
-        });
-    } catch (e) {
-        console.warn("Gagal load produk");
+        autoInterval = setInterval(() => slideTo('next'), 2000);
     }
 }
 
@@ -212,9 +244,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         slidesContainer.innerHTML = '<img class="hero-bg" src="/slidebg/1.webp">';
     } else {
         renderCurrent();
-        startAuto();
+        resetAuto();
     }
-    loadProducts();
 });
 </script>
 </body>
