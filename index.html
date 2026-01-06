@@ -5,16 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lumineuse Store</title>
     <link rel="stylesheet" href="css/style.css">
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+    <style>
+        /* Tambahkan transisi fade untuk hero background */
+        .hero-bg {
+            transition: opacity 0.4s ease-in-out;
+        }
+    </style>
 </head>
 <body>
 
     <!-- NAVBAR -->
     <header class="navbar">
         <div class="logo">Lumineuse</div>
-
         <nav>
             <a href="#">Home</a>
             <a href="#">Shop</a>
@@ -22,7 +25,6 @@
             <a href="#footer-about">About Us</a>
             <a href="#">Contact Us</a>
         </nav>
-
         <div class="nav-text-links">
             <a href="#">Search</a>
             <a href="#">Cart</a>
@@ -31,22 +33,18 @@
 
     <!-- HERO -->
     <section class="hero">
-        <!-- Akan diisi oleh JS dengan /slidebg/1.webp, dll -->
-        <img src="/slidebg/1.webp" class="hero-bg" onerror="this.src='/slidebg/1.webp'">
+        <img src="" class="hero-bg" alt="Hero Slide">
         <div class="hero-content">
             <h1>EMBRANCING<br>THE CHILL</h1>
             <button class="btn">Discovery Now</button>
         </div>
-
         <button class="arrow left">‹</button>
         <button class="arrow right">›</button>
     </section>
     
     <section class="products" id="products-section">
         <h2>New Arrivals</h2>
-        <div class="products-grid" id="products-grid">
-        <!-- Products will be inserted here by JavaScript -->
-        </div>
+        <div class="products-grid" id="products-grid"></div>
     </section>
 	
     <!-- FOOTER -->
@@ -58,14 +56,12 @@
             <a href="#">Returns & Refunds</a>
             <a href="#">Track Order</a>
         </div>
-
         <div class="footer-col">
             <h3>Company</h3>
             <a href="#">Careers</a>
             <a href="#">Partnership</a>
             <a href="#">Press</a>
         </div>
-
         <div class="footer-col">
             <h3>Follow Us</h3>
             <a href="#">Instagram</a>
@@ -75,83 +71,110 @@
     </footer>
 
 <script>
-// === KONFIGURASI SLIDE HERO ===
-const totalHeroSlides = 5; // Sesuaikan: 1.webp sampai 5.webp → isi 5
-let currentSlide = 1;
+// === DETEKSI FILE SLIDE YANG ADA ===
+async function findValidSlides(maxAttempts = 20) {
+    const validSlides = [];
+    for (let i = 1; i <= maxAttempts; i++) {
+        try {
+            const response = await fetch(`/slidebg/${i}.webp`, { method: 'HEAD' });
+            if (response.ok) {
+                validSlides.push(i);
+            } else {
+                break; // asumsi urutan berurut, kalau gagal berhenti
+            }
+        } catch (err) {
+            break;
+        }
+    }
+    return validSlides;
+}
+
+// === SETUP SLIDER ===
+let validSlideNumbers = [];
+let currentSlideIndex = 0;
 let slideInterval;
 
 const heroImg = document.querySelector('.hero-bg');
 const btnLeft = document.querySelector('.arrow.left');
 const btnRight = document.querySelector('.arrow.right');
 
-// === Ganti gambar hero ===
-function updateHeroSlide(index) {
-    heroImg.src = `/slidebg/${index}.webp`;
-    heroImg.onerror = () => { heroImg.src = `/slidebg/1.webp`; };
+function showSlide(index) {
+    if (validSlideNumbers.length === 0) return;
+    const num = validSlideNumbers[index];
+    heroImg.src = `/slidebg/${num}.webp`;
 }
 
-// === Navigasi manual ===
+function nextSlide() {
+    if (validSlideNumbers.length <= 1) return;
+    currentSlideIndex = (currentSlideIndex + 1) % validSlideNumbers.length;
+    showSlide(currentSlideIndex);
+}
+
+function prevSlide() {
+    if (validSlideNumbers.length <= 1) return;
+    currentSlideIndex = (currentSlideIndex - 1 + validSlideNumbers.length) % validSlideNumbers.length;
+    showSlide(currentSlideIndex);
+}
+
+function startAutoSlide() {
+    clearInterval(slideInterval);
+    if (validSlideNumbers.length > 1) {
+        slideInterval = setInterval(nextSlide, 2000);
+    }
+}
+
 btnLeft.addEventListener('click', () => {
-    currentSlide = currentSlide > 1 ? currentSlide - 1 : totalHeroSlides;
-    updateHeroSlide(currentSlide);
-    resetAutoSlide();
+    prevSlide();
+    startAutoSlide(); // reset timer
 });
 
 btnRight.addEventListener('click', () => {
-    currentSlide = currentSlide < totalHeroSlides ? currentSlide + 1 : 1;
-    updateHeroSlide(currentSlide);
-    resetAutoSlide();
+    nextSlide();
+    startAutoSlide(); // reset timer
 });
 
-// === Auto slide setiap 2 detik ===
-function startAutoSlide() {
-    slideInterval = setInterval(() => {
-        currentSlide = currentSlide < totalHeroSlides ? currentSlide + 1 : 1;
-        updateHeroSlide(currentSlide);
-    }, 2000);
-}
-
-function resetAutoSlide() {
-    clearInterval(slideInterval);
-    startAutoSlide();
-}
-
-// === LOAD PRODUK (dengan placeholder berurut) ===
-document.addEventListener('DOMContentLoaded', async () => {
-    // Jalankan hero slider
-    updateHeroSlide(currentSlide);
-    startAutoSlide();
-
-    // Load produk seperti asli
+// === LOAD PRODUK (sama seperti sebelumnya) ===
+async function loadProducts() {
+    const grid = document.getElementById('products-grid');
     try {
-        const response = await fetch('/api/products');
-        const products = await response.json();
-
-        const grid = document.getElementById('products-grid');
+        const res = await fetch('/api/products');
+        const products = await res.json();
         grid.innerHTML = '';
-
-        products.forEach((product, index) => {
-            const cleanFilename = product.photo_url.replace('/uploads/', '');
-            const placeholderNum = (index % 10) + 1; // asumsi 10 placeholder
+        products.forEach((product, idx) => {
+            const placeholderNum = (idx % 10) + 1;
             const placeholderUrl = `/placeholder/${placeholderNum}.webp`;
-
-            const productEl = document.createElement('div');
-            productEl.className = 'product-card';
-
-            productEl.innerHTML = `
-                <img src="/photo?file=${cleanFilename}"
-                     alt="${product.name}"
-                     onerror="this.src='${placeholderUrl}'">
+            const clean = product.photo_url ? product.photo_url.replace('/uploads/', '') : '';
+            const el = document.createElement('div');
+            el.className = 'product-card';
+            el.innerHTML = `
+                <img src="${product.photo_url ? '/photo?file=' + clean : placeholderUrl}"
+                     alt="${product.name}" onerror="this.src='${placeholderUrl}'">
                 <h3>${product.name}</h3>
                 <p class="price">Rp ${product.price}</p>
             `;
-
-            grid.appendChild(productEl);
+            grid.appendChild(el);
         });
-
-    } catch (error) {
-        console.error(error);
+    } catch (err) {
+        console.warn("Gagal load produk, fallback ke dummy");
+        // fallback optional
     }
+}
+
+// === INIT ===
+document.addEventListener('DOMContentLoaded', async () => {
+    // Cari slide yang valid
+    validSlideNumbers = await findValidSlides(20); // coba sampai 20 file
+
+    if (validSlideNumbers.length === 0) {
+        // fallback jika tidak ada
+        heroImg.src = '/slidebg/1.webp';
+    } else {
+        showSlide(0);
+        startAutoSlide();
+    }
+
+    // Load produk
+    loadProducts();
 });
 </script>
 </body>
