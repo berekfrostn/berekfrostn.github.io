@@ -119,7 +119,7 @@
     <!-- ABOUT US SECTION -->
     <section class="about" id="about">
         <div class="about-image">
-            <img src="/about.webp" alt="Lumineuse Brand">
+            <img src="/about/about.webp" alt="Lumineuse Brand">
         </div>
         <div class="about-content">
             <h2>About Us</h2>
@@ -221,4 +221,28 @@ function slideTo(direction) {
         currentIndex = nextIndex;
         isAnimating = false;
         renderCurrent();
-    }, 500
+    }, 500);
+}
+
+leftBtn.addEventListener('click', () => { slideTo('prev'); resetAuto(); });
+rightBtn.addEventListener('click', () => { slideTo('next'); resetAuto(); });
+
+function resetAuto() {
+    clearInterval(autoInterval);
+    if (validSlides.length > 1) {
+        autoInterval = setInterval(() => slideTo('next'), 2000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    validSlides = await findValidSlides(20);
+    if (validSlides.length === 0) {
+        slidesContainer.innerHTML = '<img class="hero-bg" src="/slidebg/1.webp">';
+    } else {
+        renderCurrent();
+        resetAuto();
+    }
+});
+</script>
+</body>
+</html>
