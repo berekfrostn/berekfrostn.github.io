@@ -7,10 +7,52 @@
     <link rel="stylesheet" href="css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
     <style>
-        /* Tambahkan transisi fade untuk hero background */
-        .hero-bg {
-            transition: opacity 0.4s ease-in-out;
+        /* === HERO SLIDE ANIMATION === */
+        .hero {
+            position: relative;
+            overflow: hidden;
         }
+
+        .hero-slide-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.33, 0, 0.66, 1);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.5);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 20;
+        }
+
+        .arrow.left { left: 20px; }
+        .arrow.right { right: 20px; }
     </style>
 </head>
 <body>
@@ -33,7 +75,9 @@
 
     <!-- HERO -->
     <section class="hero">
-        <img src="" class="hero-bg" alt="Hero Slide">
+        <div class="hero-slide-container">
+            <!-- Akan diisi oleh JS dengan 2 gambar -->
+        </div>
         <div class="hero-content">
             <h1>EMBRANCING<br>THE CHILL</h1>
             <button class="btn">Discovery Now</button>
@@ -71,109 +115,146 @@
     </footer>
 
 <script>
-// === DETEKSI FILE SLIDE YANG ADA ===
+// === DETEKSI SLIDE YANG ADA ===
 async function findValidSlides(maxAttempts = 20) {
-    const validSlides = [];
+    const valid = [];
     for (let i = 1; i <= maxAttempts; i++) {
         try {
-            const response = await fetch(`/slidebg/${i}.webp`, { method: 'HEAD' });
-            if (response.ok) {
-                validSlides.push(i);
-            } else {
-                break; // asumsi urutan berurut, kalau gagal berhenti
-            }
-        } catch (err) {
+            const res = await fetch(`/slidebg/${i}.webp`, { method: 'HEAD' });
+            if (res.ok) valid.push(i);
+            else break;
+        } catch {
             break;
         }
     }
-    return validSlides;
+    return valid;
 }
 
-// === SETUP SLIDER ===
-let validSlideNumbers = [];
-let currentSlideIndex = 0;
-let slideInterval;
+// === SLIDER LOGIC ===
+let validSlides = [];
+let currentIdx = 0;
+let autoInterval;
+let isAnimating = false;
 
-const heroImg = document.querySelector('.hero-bg');
-const btnLeft = document.querySelector('.arrow.left');
-const btnRight = document.querySelector('.arrow.right');
+const container = document.querySelector('.hero-slide-container');
+const leftBtn = document.querySelector('.arrow.left');
+const rightBtn = document.querySelector('.arrow.right');
 
-function showSlide(index) {
-    if (validSlideNumbers.length === 0) return;
-    const num = validSlideNumbers[index];
-    heroImg.src = `/slidebg/${num}.webp`;
+function createSlide(src, className = '') {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = `hero-slide ${className}`;
+    img.onerror = () => { img.src = `/slidebg/1.webp`; };
+    return img;
 }
 
-function nextSlide() {
-    if (validSlideNumbers.length <= 1) return;
-    currentSlideIndex = (currentSlideIndex + 1) % validSlideNumbers.length;
-    showSlide(currentSlideIndex);
+function renderSlides() {
+    container.innerHTML = '';
+    if (validSlides.length === 0) return;
+
+    const currentSrc = `/slidebg/${validSlides[currentIdx]}.webp`;
+    const currentImg = createSlide(currentSrc);
+    currentImg.style.transform = 'translateX(0)';
+    container.appendChild(currentImg);
 }
 
-function prevSlide() {
-    if (validSlideNumbers.length <= 1) return;
-    currentSlideIndex = (currentSlideIndex - 1 + validSlideNumbers.length) % validSlideNumbers.length;
-    showSlide(currentSlideIndex);
+function animateSlide(direction) {
+    if (isAnimating || validSlides.length <= 1) return;
+    isAnimating = true;
+
+    const currentSrc = `/slidebg/${validSlides[currentIdx]}.webp`;
+    let nextIdx, nextSrc;
+
+    if (direction === 'next') {
+        nextIdx = (currentIdx + 1) % validSlides.length;
+    } else {
+        nextIdx = (currentIdx - 1 + validSlides.length) % validSlides.length;
+    }
+    nextSrc = `/slidebg/${validSlides[nextIdx]}.webp`;
+
+    const currentImg = createSlide(currentSrc);
+    const nextImg = createSlide(nextSrc);
+
+    // Posisi awal
+    currentImg.style.transform = 'translateX(0)';
+    if (direction === 'next') {
+        nextImg.style.transform = 'translateX(100%)'; // dari kanan
+    } else {
+        nextImg.style.transform = 'translateX(-100%)'; // dari kiri
+    }
+
+    container.innerHTML = '';
+    container.appendChild(currentImg);
+    container.appendChild(nextImg);
+
+    // Trigger animasi
+    setTimeout(() => {
+        currentImg.style.transform = direction === 'next' ? 'translateX(-100%)' : 'translateX(100%)';
+        nextImg.style.transform = 'translateX(0)';
+    }, 10);
+
+    setTimeout(() => {
+        currentIdx = nextIdx;
+        isAnimating = false;
+        renderSlides(); // kembali ke single image setelah animasi
+    }, 500);
 }
 
-function startAutoSlide() {
-    clearInterval(slideInterval);
-    if (validSlideNumbers.length > 1) {
-        slideInterval = setInterval(nextSlide, 2000);
+function nextSlide() { animateSlide('next'); }
+function prevSlide() { animateSlide('prev'); }
+
+function startAuto() {
+    clearInterval(autoInterval);
+    if (validSlides.length > 1) {
+        autoInterval = setInterval(nextSlide, 3000);
     }
 }
 
-btnLeft.addEventListener('click', () => {
+leftBtn.addEventListener('click', () => {
     prevSlide();
-    startAutoSlide(); // reset timer
+    startAuto();
 });
 
-btnRight.addEventListener('click', () => {
+rightBtn.addEventListener('click', () => {
     nextSlide();
-    startAutoSlide(); // reset timer
+    startAuto();
 });
 
-// === LOAD PRODUK (sama seperti sebelumnya) ===
+// === LOAD PRODUK ===
 async function loadProducts() {
     const grid = document.getElementById('products-grid');
     try {
         const res = await fetch('/api/products');
         const products = await res.json();
         grid.innerHTML = '';
-        products.forEach((product, idx) => {
-            const placeholderNum = (idx % 10) + 1;
-            const placeholderUrl = `/placeholder/${placeholderNum}.webp`;
-            const clean = product.photo_url ? product.photo_url.replace('/uploads/', '') : '';
+        products.forEach((p, i) => {
+            const ph = `/placeholder/${(i % 10) + 1}.webp`;
+            const clean = p.photo_url?.replace('/uploads/', '') || '';
             const el = document.createElement('div');
             el.className = 'product-card';
             el.innerHTML = `
-                <img src="${product.photo_url ? '/photo?file=' + clean : placeholderUrl}"
-                     alt="${product.name}" onerror="this.src='${placeholderUrl}'">
-                <h3>${product.name}</h3>
-                <p class="price">Rp ${product.price}</p>
+                <img src="${p.photo_url ? '/photo?file=' + clean : ph}" 
+                     alt="${p.name}" onerror="this.src='${ph}'">
+                <h3>${p.name}</h3>
+                <p class="price">Rp ${p.price}</p>
             `;
             grid.appendChild(el);
         });
-    } catch (err) {
-        console.warn("Gagal load produk, fallback ke dummy");
-        // fallback optional
+    } catch (e) {
+        console.warn("Produk gagal dimuat");
     }
 }
 
 // === INIT ===
 document.addEventListener('DOMContentLoaded', async () => {
-    // Cari slide yang valid
-    validSlideNumbers = await findValidSlides(20); // coba sampai 20 file
-
-    if (validSlideNumbers.length === 0) {
-        // fallback jika tidak ada
-        heroImg.src = '/slidebg/1.webp';
+    validSlides = await findValidSlides(20);
+    if (validSlides.length === 0) {
+        // fallback
+        container.appendChild(createSlide('/slidebg/1.webp'));
     } else {
-        showSlide(0);
-        startAutoSlide();
+        renderSlides();
+        startAuto();
     }
-
-    // Load produk
     loadProducts();
 });
 </script>
