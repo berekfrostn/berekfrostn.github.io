@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Tambah Produk Baru</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .note {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>➕ Tambah Produk Baru</h1>
+
+    <form action="/submit-product" method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="name">Nama Produk:</label>
+            <input type="text" id="name" name="name" required placeholder="Contoh: Smartphone X">
+        </div>
+
+        <div class="form-group">
+            <label for="price">Harga (Rp):</label>
+            <input type="text" id="price" name="price" required placeholder="Contoh: 2.500.000">
+        </div>
+
+        <div class="form-group">
+            <label for="description">Deskripsi:</label>
+            <textarea id="description" name="description" rows="5" required placeholder="Jelaskan produk ini..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="photo">Foto Produk:</label>
+            <input type="file" id="photo" name="photo" accept="image/*" required>
+            <div class="note">Hanya gambar (jpg, png, webp)</div>
+        </div>
+
+        <button type="submit">Simpan Produk</button>
+    </form>
+</body>
+</html>

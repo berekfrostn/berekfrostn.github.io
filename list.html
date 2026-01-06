@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>List Produk</title>
+</head>
+<body>
+    <h1>Daftar Produk</h1>
+
+    {{range .}}
+        <div>
+            <img src="/uploads/{{.Image}}" width="120">
+            <p><b>{{.Name}}</b> ({{.Category}})</p>
+            <p>{{.Description}}</p>
+        </div>
+        <hr>
+    {{end}}
+
+    <a href="/add">Tambah Produk</a>
+</body>
+</html>
