@@ -1,0 +1,20 @@
+<form action="/add" method="post" enctype="multipart/form-data">
+    <label>Nama:</label><br>
+    <input type="text" name="name" required><br><br>
+    
+    <label>Deskripsi:</label><br>
+    <textarea name="description" required></textarea><br><br>
+    
+    <label>Foto:</label><br>
+    <input type="file" name="image" accept="image/*" required><br><br>
+    
+    <label>Kategori:</label><br>
+    <select name="category" required>
+        <option value="Elektronik">Elektronik</option>
+        <option value="Pakaian">Pakaian</option>
+        <option value="Aksesoris">Aksesoris</option>
+        <option value="Lainnya">Lainnya</option>
+    </select><br><br>
+    
+    <input type="submit" value="Tambah Produk">
+</form>
